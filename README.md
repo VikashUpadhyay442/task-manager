@@ -59,7 +59,7 @@ This project implements a server-rendered task management system where authentic
 ## Scope & Constraints
 
 - Server-rendered UI (no SPA or frontend framework)
-- - Multi-user authentication
+- Multi-user authentication
 - No role-based access control
 - SQLite used for simplicity
 
