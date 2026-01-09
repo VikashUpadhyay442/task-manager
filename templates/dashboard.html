@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h2 class="mb-4 text-center">My Tasks</h2>
+
+    <form action="{{ url_for('add') }}" method="POST" class="mb-3">
+        <div class="input-group">
+            <input type="text" name="content" class="form-control form-control-lg" placeholder="What needs to be done?" required>
+            <select name="priority" class="form-select form-select-lg" style="max-width: 130px;">
+                <option value="Low">Low</option>
+                <option value="Medium" selected>Medium</option>
+                <option value="High">High</option>
+            </select>
+            <input type="date" name="due_date" class="form-control form-control-lg" style="max-width: 160px;">
+            <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Add</button>
+        </div>
+    </form>
+    
+    <form method="GET" class="input-group mb-3">
+        <input type="text" name="search" class="form-control" placeholder="Search tasks..." value="{{ request.args.get('search', '') }}">
+        <button type="submit" class="btn btn-outline-secondary"><i class="fas fa-search"></i></button>
+        {% if request.args.get('search') %}<a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary"><i class="fas fa-times"></i></a>{% endif %}
+    </form>
+
+    {% if tasks %}
+    <div class="d-flex justify-content-end mb-2">
+        <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#clearAllModal">
+            <i class="fas fa-trash me-2"></i>Clear All Tasks
+        </button>
+    </div>
+
+    <!-- Clear All Modal -->
+    <div class="modal fade" id="clearAllModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirm Clear All</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Are you sure you want to delete <strong>ALL</strong> your tasks? This action cannot be undone.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <a href="{{ url_for('clear_all') }}" class="btn btn-danger">Yes, Clear All</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <table class="table table-hover align-middle">
+        <thead>
+            <tr>
+                <th style="width: 45%;">Task</th>
+                <th style="width: 10%;">Priority</th>
+                <th style="width: 15%;">Due Date</th>
+                <th style="width: 30%; text-align: right;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for task in tasks %}
+            <tr class="{% if task.is_completed %}task-done{% endif %}">
+                <td>
+                    {% if task.is_completed %}
+                        <span class="badge rounded-pill bg-success me-2"><i class="fas fa-check-circle"></i> Done</span>
+                    {% else %}
+                        <span class="badge rounded-pill bg-warning text-dark me-2"><i class="fas fa-clock"></i> To Do</span>
+                    {% endif %}
+                    <span class="task-text">{{ task.content }}</span>
+                </td>
+                <td>
+                    {% if task.priority == 'High' %}
+                        <span class="badge bg-danger">High</span>
+                    {% elif task.priority == 'Medium' %}
+                        <span class="badge bg-warning text-dark">Medium</span>
+                    {% else %}
+                        <span class="badge bg-info text-dark">Low</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if task.due_date %}
+                        {{ task.due_date.strftime('%d %b %Y') }}
+                    {% else %}
+                        <span class="text-muted">-</span>
+                    {% endif %}
+                </td>
+                <td style="text-align: right;">
+                    <a href="{{ url_for('toggle', id=task.id) }}" class="btn btn-sm {% if task.is_completed %}btn-secondary{% else %}btn-success{% endif %}" title="Toggle Status">
+                        <i class="fas fa-check"></i>
+                    </a>
+                    <a href="{{ url_for('update', id=task.id) }}" class="btn btn-sm btn-info text-white" title="Edit">
+                        <i class="fas fa-pen"></i>
+                    </a>
+                    <!-- Delete Button triggers Modal -->
+                    <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ task.id }}" title="Delete">
+                        <i class="fas fa-trash"></i>
+                    </button>
+
+                    <!-- Delete Confirmation Modal -->
+                    <div class="modal fade" id="deleteModal{{ task.id }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Confirm Delete</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body text-start">
+                                    Are you sure you want to delete the task: <strong>{{ task.content }}</strong>?
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                    <a href="{{ url_for('delete', id=task.id) }}" class="btn btn-danger">Delete</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-clipboard-list fa-3x mb-3 text-muted"></i>
+        <h4>No tasks found</h4>
+        <p>Looks like you're all caught up, or haven't started yet!</p>
+    </div>
+    {% endif %}
+{% endblock %}
